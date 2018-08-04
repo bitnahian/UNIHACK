@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
 
 from flask import Flask, jsonify, url_for, redirect, request
-# from flask_pymongo import PyMongo
+from flask_pymongo import PyMongo
 from flask_restful import Api, Resource
 
 app = Flask(__name__)
-# app.config["MONGO_DBNAME"] = "crimegeo_db"
-# mongo = PyMongo(app, config_prefix='MONGO')
+app.config["MONGO_DBNAME"] = "crimegeo_db"
+mongo = PyMongo(app, config_prefix='MONGO')
 APP_URL = "http://127.0.0.1:5000"
 
 
 class CrimeGeo(Resource):
     def get(self):
-#        data = []
+        data = request.get_json()
+        if not data:
+            data = {"response":"ERROR"}
+            return jsonify(data)
+        
 #
 #        cursor = mongo.db.student.find({}, {"_id": 0, "update_time": 0}).limit(10)
 #
