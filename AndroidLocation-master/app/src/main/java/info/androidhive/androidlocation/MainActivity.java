@@ -52,8 +52,6 @@ import com.karumi.dexter.listener.PermissionDeniedResponse;
 import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
-import com.loopj.android.http.JsonHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
 
 
 import org.json.JSONArray;
@@ -69,11 +67,18 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import okhttp3.RequestBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import static android.content.ContentValues.TAG;
 
@@ -421,27 +426,27 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.btn_api)
     public void get(){
-        RequestParams rp = new RequestParams();
-        rp.add("latitude", "-30"); rp.add("longitude", "150");
+        Retrofit retrofit = new Retrofit.Builder()
+                .addConverterFactory(GsonConverterFactory.create())
+                .baseUrl("http://bitnahian.me:5000")
+                .build();
 
-        HttpUtils.get("http://bitnahian.me:5000/api/", rp, new JsonHttpResponseHandler() {
-            public void onSuccess(int statusCode, PreferenceActivity.Header[] headers, JSONObject response) {
-                // If the response is JSONObject instead of expected JSONArray
-                Log.d("asd", "---------------- this is response : " + response);
-                try {
-                    JSONObject serverResp = new JSONObject(response.toString());
-                } catch (JSONException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+        GitHubService service = retrofit.create(GitHubService.class);
+        Call<User> call = service.singleUser();
+        String result = "PHD";
+
+        call.enqueue(new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                Log.d("API_GET_RESULT", response.body().toString());
             }
 
-            public void onSuccess(int statusCode, PreferenceActivity.Header[] headers, JSONArray timeline) {
-                // Pull out the first event on the public timeline
-
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                Log.d("API_FAILED_TOGET", t.getMessage());
             }
         });
-
+        Log.d("GettingResult", result);
     }
 
     @OnClick(R.id.btn_flash)
