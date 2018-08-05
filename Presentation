@@ -1,0 +1,22 @@
+INSPIRATION:
+  Greg got a ticket for speeding
+
+OPENING:
+  (IF We GET SELECTED)How many of you have ever received a ticket for speeding or red light offence?
+                      How many of you DON'T WANT to receive one?
+                      Then our app is the solution for you!
+    
+## PITCH:
+  * Between 2016 and 2018 alone, there have been approx 650k cases of speeding and red light offences in NSW which amounted to approx 200m
+  in fines.
+  * Processing these fees also takes up valuable resources such as time and money for the government and the citizens
+  * Currently there's no framework in place that forewarns the drivers about these offences in crime-prone areas such as the
+  Pacific Highway for example. 
+
+## USEFULNESS AND ORIGINILAITY
+  * Currently, the government just dumps a bunch of data and says, "Here you go!"... 
+  * There is no feasible way for the general people to make use of that data.
+  * Using the data we have, we created an API endpoint for applications across all platforms to consume. 
+  * It is not only scalable, but we can create more API endpoints and potentially create a service 
+  
+## TECHNICAL DIFFICULTY AND DESIGN
