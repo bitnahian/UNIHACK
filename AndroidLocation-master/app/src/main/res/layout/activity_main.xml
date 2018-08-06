@@ -1,76 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center_horizontal"
-    android:orientation="vertical"
-    tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/btn_start_location_updates"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:text="@string/start_updates" />
 
-    <Button
-        android:id="@+id/btn_stop_location_updates"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:enabled="false"
-        android:text="@string/stop_updates" />
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:background="@color/main"
+        tools:context=".MainActivity">
 
-    <Button
-        android:id="@+id/btn_get_last_location"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="@string/get_last_location" />
+        <TextView
+            android:id="@+id/btn_main"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:layout_centerInParent="true"
+            android:layout_width="wrap_content"
+            android:layout_height="200dp"
+            android:text="\uf144"
+            android:textColor="@color/gray"
+            android:fontFamily="@font/fa"
+            android:textSize="150sp" />
 
-    <Button
-        android:id="@+id/btn_flash"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="FLASH" />
+        <TextView
+            android:id="@+id/school"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@id/btn_main"
+            android:text="\uf549"
+            android:textColor="@color/gray"
+            android:fontFamily="@font/fa2"
+            android:textSize="50sp" />
 
-    <Button
-        android:id="@+id/btn_tts"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="TTS" />
+        <TextView
+            android:id="@+id/speed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/school"
+            android:layout_below="@id/btn_main"
+            android:text="\uf03d"
+            android:textColor="@color/gray"
+            android:fontFamily="@font/fa2"
+            android:textSize="50sp" />
 
-    <Button
-        android:id="@+id/btn_topBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="TopBar" />
+        <TextView
+            android:id="@+id/light"
+            android:layout_width="60dp"
+            android:layout_height="wrap_content"
+            android:layout_toLeftOf="@id/school"
+            android:layout_below="@id/btn_main"
+            android:text="\uf637"
+            android:textColor="@color/gray"
+            android:fontFamily="@font/fa2"
+            android:textSize="50sp" />
 
-    <Button
-        android:id="@+id/btn_api"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="API" />
 
-    <TextView
-        android:id="@+id/location_result"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:textColor="#333"
-        android:textSize="18dp" />
+
+
+
+
+        <TextView
+            android:id="@+id/information"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:visibility="gone"
+            android:layout_marginTop="30dp"
+            android:textSize="18dp" />
 
     <TextView
         android:id="@+id/updated_on"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@id/information"
+        android:visibility="gone"
         android:layout_marginTop="30dp"
         android:textSize="11dp" />
 
-</LinearLayout>
+    <TextView
+        android:id="@+id/location_result"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/school"
+        android:visibility="gone"
+        android:layout_above="@id/updated_on"
+        android:textColor="#333"
+        android:textSize="18dp" />
+
+    </RelativeLayout>
+
+

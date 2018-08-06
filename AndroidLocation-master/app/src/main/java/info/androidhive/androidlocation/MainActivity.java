@@ -11,13 +11,13 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.PackageManager;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraManager;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Looper;
-import android.preference.PreferenceActivity;
 import android.provider.Settings;
 import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
@@ -27,6 +27,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
+import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -54,33 +55,21 @@ import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
 
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import okhttp3.RequestBody;
+import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-import static android.content.ContentValues.TAG;
 
 /**
  * Reference: https://github.com/googlesamples/android-play-location/tree/master/LocationUpdates
@@ -96,23 +85,31 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.updated_on)
     TextView txtUpdatedOn;
 
-    @BindView(R.id.btn_start_location_updates)
-    Button btnStartUpdates;
+    @BindView(R.id.btn_main)
+    TextView btnMain;
 
-    @BindView(R.id.btn_stop_location_updates)
-    Button btnStopUpdates;
+    @BindView(R.id.information)
+    TextView txtInfo;
 
-    @BindView(R.id.btn_flash)
-    Button btnFlash;
+    @BindView(R.id.school)
+    TextView icoSchool;
+    @BindView(R.id.light)
+    TextView icoLight;
+    @BindView(R.id.speed)
+    TextView icoSpeed;
 
-    @BindView(R.id.btn_tts)
-    Button btnTTS;
 
-    @BindView(R.id.btn_topBar)
-    Button btnTopBar;
-
-    @BindView(R.id.btn_api)
-    Button btnAPI;
+//    @BindView(R.id.btn_flash)
+//    Button btnFlash;
+//
+//    @BindView(R.id.btn_tts)
+//    Button btnTTS;
+//
+//    @BindView(R.id.btn_topBar)
+//    Button btnTopBar;
+//
+//    @BindView(R.id.btn_api)
+//    Button btnAPI;
 
     // location last updated time
     private String mLastUpdateTime;
@@ -137,9 +134,14 @@ public class MainActivity extends AppCompatActivity {
     private Location mCurrentLocation;
 
     // boolean flag to toggle the ui
-    private Boolean mRequestingLocationUpdates;
+    private Boolean mRequestingLocationUpdates = false;
 
     private TextToSpeech t1;
+
+    private boolean School_Zone = false;
+    private int Red_Lights = 0;
+    private int Speeding = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -232,6 +234,49 @@ public class MainActivity extends AppCompatActivity {
 
             // location last updated time
             txtUpdatedOn.setText("Last updated on: " + mLastUpdateTime);
+
+            // Get from API
+            getAPI((""+ mCurrentLocation.getLatitude()), (""+ mCurrentLocation.getLongitude()));
+            txtInfo.setText("School Zone:" + School_Zone +"\nRed Light:" + Red_Lights + "\nSpeed Camera:" + Speeding);
+
+
+            int color = 0;
+            String speak = "";
+            if(Speeding > 1000){
+                flash();
+                speak += "Caution Speeding Camera ...";
+                color = 1;
+                icoSpeed.setTextColor(Color.RED);
+            }else{
+                icoSpeed.setTextColor(Color.GRAY);
+            }
+
+            if(Red_Lights > 1000){
+                flash();
+                speak += "Caution Red Light Camera ...";
+                color = 2;
+                icoLight.setTextColor(Color.YELLOW);
+            }else{
+                icoLight.setTextColor(Color.GRAY);
+            }
+
+            if(School_Zone){
+                speak += "Caution School Zone Ahead ...";
+                icoSchool.setTextColor(Color.RED);
+            }else{
+                icoSchool.setTextColor(Color.GRAY);
+            }
+
+            if(color == 2){
+                setTopBarRed();
+            }else if(color == 1){
+                setTopBarYellow();
+            }else{
+                setTopBarBlack();
+            }
+
+            t1.speak(speak, TextToSpeech.QUEUE_FLUSH, null);
+
         }
 
         toggleButtons();
@@ -248,11 +293,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void toggleButtons() {
         if (mRequestingLocationUpdates) {
-            btnStartUpdates.setEnabled(false);
-            btnStopUpdates.setEnabled(true);
+            btnMain.setText("\uf28d");
         } else {
-            btnStartUpdates.setEnabled(true);
-            btnStopUpdates.setEnabled(false);
+            btnMain.setText("\uf144");
         }
     }
 
@@ -270,7 +313,7 @@ public class MainActivity extends AppCompatActivity {
                     public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
                         Log.i(TAG, "All location settings are satisfied.");
 
-                        Toast.makeText(getApplicationContext(), "Started location updates!", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(), "Started location updates!", Toast.LENGTH_SHORT).show();
 
                         //noinspection MissingPermission
                         mFusedLocationClient.requestLocationUpdates(mLocationRequest,
@@ -311,7 +354,15 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    @OnClick(R.id.btn_start_location_updates)
+    @OnClick(R.id.btn_main)
+    public void button(){
+        if (mRequestingLocationUpdates) {
+            stopLocationButtonClick();
+        }else{
+            startLocationButtonClick();
+        }
+    }
+
     public void startLocationButtonClick() {
         // Requesting ACCESS_FINE_LOCATION using Dexter library
         Dexter.withActivity(this)
@@ -339,7 +390,6 @@ public class MainActivity extends AppCompatActivity {
                 }).check();
     }
 
-    @OnClick(R.id.btn_stop_location_updates)
     public void stopLocationButtonClick() {
         mRequestingLocationUpdates = false;
         stopLocationUpdates();
@@ -352,20 +402,10 @@ public class MainActivity extends AppCompatActivity {
                 .addOnCompleteListener(this, new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
-                        Toast.makeText(getApplicationContext(), "Location updates stopped!", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(getApplicationContext(), "Location updates stopped!", Toast.LENGTH_SHORT).show();
                         toggleButtons();
                     }
                 });
-    }
-
-    @OnClick(R.id.btn_get_last_location)
-    public void showLastKnownLocation() {
-        if (mCurrentLocation != null) {
-            Toast.makeText(getApplicationContext(), "Lat: " + mCurrentLocation.getLatitude()
-                    + ", Lng: " + mCurrentLocation.getLongitude(), Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(getApplicationContext(), "Last known location is not available!", Toast.LENGTH_SHORT).show();
-        }
     }
 
     @Override
@@ -399,18 +439,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    @OnClick(R.id.btn_tts)
+    //@OnClick(R.id.btn_tts)
     public void read(){
         String toSpeak = "Warning Red Light Camera Ahead";
         t1.speak(toSpeak, TextToSpeech.QUEUE_FLUSH, null);
     }
 
-    @OnClick(R.id.btn_topBar)
+    //@OnClick(R.id.btn_topBar)
     public void btnTopBar(){
-        setTopBar();
+        setTopBarRed();
     }
 
-    public void setTopBar(){
+    public void setTopBarRed(){
         Window window = this.getWindow();
 
         // clear FLAG_TRANSLUCENT_STATUS flag:
@@ -420,24 +460,58 @@ public class MainActivity extends AppCompatActivity {
         window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
 
         // finally change the color
-        window.setStatusBarColor(ContextCompat.getColor(this,R.color.my_statusbar_color));
+        window.setStatusBarColor(ContextCompat.getColor(this,R.color.red));
+    }
+
+    public void setTopBarYellow(){
+        Window window = this.getWindow();
+
+        // clear FLAG_TRANSLUCENT_STATUS flag:
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+        // add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+        // finally change the color
+        window.setStatusBarColor(ContextCompat.getColor(this,R.color.yellow));
+    }
+
+    public void setTopBarBlack(){
+        Window window = this.getWindow();
+
+        // clear FLAG_TRANSLUCENT_STATUS flag:
+        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+
+        // add FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS flag to the window
+        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+
+        // finally change the color
+        window.setStatusBarColor(ContextCompat.getColor(this,R.color.black));
     }
 
 
-    @OnClick(R.id.btn_api)
+    //@OnClick(R.id.btn_api)
     public void get(){
+        getAPI("-34", "150");
+    }
+
+    public void getAPI(String lat, String lon){
+
         Retrofit retrofit = new Retrofit.Builder()
                 .addConverterFactory(GsonConverterFactory.create())
                 .baseUrl("http://bitnahian.me:5000")
                 .build();
 
         GitHubService service = retrofit.create(GitHubService.class);
-        Call<User> call = service.singleUser();
-        String result = "PHD";
+
+        Call<User> call = service.singleUser(lat, lon);
 
         call.enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
+                Red_Lights = response.body().getLight();
+                Speeding = response.body().getSpeed();
+                School_Zone = response.body().getSchool();
                 Log.d("API_GET_RESULT", response.body().toString());
             }
 
@@ -446,10 +520,9 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("API_FAILED_TOGET", t.getMessage());
             }
         });
-        Log.d("GettingResult", result);
     }
 
-    @OnClick(R.id.btn_flash)
+    //@OnClick(R.id.btn_flash)
     public void flash(){
 
         new Thread(new Runnable() {
@@ -499,41 +572,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Notification Part, not working
-     */
-    public void sendNotification() {
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-        Notification.Builder builder = new Notification.Builder(this);
-        builder.setSmallIcon(R.mipmap.ic_launcher);
-        builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher));
-        builder.setContentTitle("Running in background");
-        builder.setContentText("Open the app to stop service.");
-        builder.setAutoCancel(true);
-
-
-        // Activity after clicking the notification
-        Intent intent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntents = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
-        builder.setContentIntent(pendingIntents);
-
-        // Active Notification
-        notificationManager.notify(1, builder.build());
-    }
-
-    public void cancelNotification() {
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(1);
-    }
-
     @Override
     public void onResume() {
         super.onResume();
-
-        if (mRequestingLocationUpdates && checkPermissions()) {
-            updateLocationUI();
-        }
+//
+//        if (mRequestingLocationUpdates && checkPermissions()) {
+//            updateLocationUI();
+//        }
     }
 
     private boolean checkPermissions() {
